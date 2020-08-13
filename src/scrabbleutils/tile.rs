@@ -18,5 +18,11 @@ impl Tile {
     pub fn points(&self) -> u8 {
         self.points
     }
+
+    pub fn set_wildcard(&mut self, c : char) {
+        if self.wildcard == true {
+            self.letter = c;
+        }
+    }
 }
 

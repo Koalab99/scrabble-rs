@@ -26,9 +26,13 @@ impl Spot {
         let word = match self.bonus_word {
             WordBonus::None => 1,
             WordBonus::Double => 2,
-            WordBonus::Triple => 2,
+            WordBonus::Triple => 3,
         };
 
         return (letter, word);
+    }
+
+    pub fn get_bonuses(&self) -> (LetterBonus, WordBonus) {
+        return (self.bonus_letter, self.bonus_word);
     }
 }

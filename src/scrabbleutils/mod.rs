@@ -1,14 +1,14 @@
 mod player;
 mod board;
-mod bonuses;
+pub mod bonuses;
 mod spot;
 mod dico;
 mod gaddag;
 mod tilebag;
 mod smove;
-mod tile;
 mod hand;
 mod config;
+mod tile;
 
 pub use player::PlayerTrait;
 pub use board::Board;

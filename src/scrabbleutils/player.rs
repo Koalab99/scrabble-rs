@@ -3,6 +3,8 @@ use super::{Board, Move, Hand};
 pub trait PlayerTrait {
     fn name(&self) -> &str;
     fn play(&self, board : &Board, hand : &Hand) -> Move;
+    fn move_score(&self, score : u32);
+    fn total_score(&self, score : u32);
 }
 
 pub struct Player {

@@ -101,18 +101,14 @@ impl Board {
         let word_it : Vec<char> = mv.word().chars().collect();
         for c in word_it {
             let board_letter = self.get_letter(pos_x, pos_y);
-            match board_letter {
-                None => { continue; },
-                Some(letter) => {
-                    if letter != c {
-                        return false;
-                    }
+            if let Some(letter) = board_letter {
+                if letter != c {
+                    return false;
                 }
             }
             pos_x += offset_x;
             pos_y += offset_y;
         }
-
         true
     }
 
@@ -177,13 +173,69 @@ impl Board {
 
         let chars = mv.word().chars();
         let mut tiles_it = tiles.into_iter();
-        for _ in chars {
+        for c in chars {
             if self.get_letter(pos_x, pos_y) == None {
-                self.get_spot_mut(pos_x, pos_y).tile = tiles_it.next();
+                let mut tile : Tile = tiles_it.next().unwrap();
+                if tile.wildcard() {
+                    // Define the new use value for the wildcard
+                    tile.set_wildcard(c);
+                }
+                self.get_spot_mut(pos_x, pos_y).tile = Some(tile);
             }
             pos_x += x_offset;
             pos_y += y_offset;
         }
+        score
+    }
+
+    // Return the score made by perpendicular words
+    fn perp_score(&self, initial_x : u8, initial_y : u8, direction : Direction, added : &Tile) -> u32 {
+        assert!(initial_x < 15);
+        assert!(initial_y < 15);
+        let mut score = 0;
+
+        let mut pos_x = initial_x as i16;
+        let mut pos_y = initial_y as i16;
+
+        let offset_x : i16;
+        let offset_y : i16;
+
+        match direction {
+            Direction::Horizontal => {
+                offset_x = 1;
+                offset_y = 0;
+            }
+            Direction::Vertical => {
+                offset_x = 0;
+                offset_y = 1;
+            }
+        }
+
+        // Initial step, count the number of point of the added letter
+        score += added.points() as u32;
+
+        // Then count the previous perpendicular letters
+        pos_x -= offset_y;
+        pos_y -= offset_x;
+
+        while pos_x >= 0 && pos_y >= 0 && pos_y < 15 &&
+                self.get_letter(pos_x as u8, pos_y as u8) != None {
+            score += self.get_tile(pos_x as u8, pos_y as u8)
+                .unwrap().points() as u32;
+            pos_x -= offset_y;
+            pos_y -= offset_x;
+        }
+
+        // Then get the nexts perpendicular letters
+        pos_x = initial_x as i16 + offset_y;
+        pos_y = initial_y as i16 + offset_x;
+        while pos_x < 15 && pos_y < 15 &&
+                self.get_letter(pos_x as u8, pos_y as u8) != None {
+            score += self.get_tile(pos_x as u8, pos_y as u8).unwrap().points() as u32;
+            pos_x += offset_y;
+            pos_y += offset_x;
+        }
+
         score
     }
 
@@ -194,17 +246,17 @@ impl Board {
 
         let mut pos_x = mv.x();
         let mut pos_y = mv.y();
-        let x_offset : u8;
-        let y_offset : u8;
+        let offset_x : u8;
+        let offset_y : u8;
 
         match mv.direction() {
             Direction::Horizontal => {
-                x_offset = 1;
-                y_offset = 0;
+                offset_x = 1;
+                offset_y = 0;
             }
             Direction::Vertical => {
-                x_offset = 0;
-                y_offset = 1;
+                offset_x = 0;
+                offset_y = 1;
             }
         }
 
@@ -216,14 +268,14 @@ impl Board {
                 None => {
                     // get the bonuses
                     let removed_tile = remove_it.next().unwrap();
-                    if !removed_tile.wildcard() {
-                        let (lb, wb) = current_spot.
-                            get_bonuses_value();
-                        word_bonus *= wb;
-                        tile_score = lb * removed_tile.points() as u32;
+                    let (lb, wb) = current_spot.get_bonuses_value();
+                    word_bonus *= wb;
+                    if self.get_letter(pos_x + offset_y, pos_y + offset_x) == None ||
+                       self.get_letter(pos_x - offset_y, pos_y - offset_x) == None {
+                        tile_score = self.perp_score(pos_x, pos_y, mv.direction(), removed_tile);
                     }
                     else {
-                        tile_score = 0;
+                        tile_score = lb * removed_tile.points() as u32;
                     }
 
                 }
@@ -232,9 +284,16 @@ impl Board {
                 }
             }
             score += tile_score;
-            pos_x += x_offset;
-            pos_y += y_offset;
+            pos_x += offset_x;
+            pos_y += offset_y;
         }
         score * word_bonus
+    }
+
+    pub fn get_bonuses(&self, x : u8, y : u8) -> (LetterBonus, WordBonus) {
+        assert!(x < 15);
+        assert!(y < 15);
+
+        return self.get_spot(x, y).get_bonuses();
     }
 }

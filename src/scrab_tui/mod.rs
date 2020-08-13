@@ -1,53 +1,89 @@
 use crate::scrabbleutils::{Board, PlayerTrait, Move, Direction::*, Hand};
+use crate::scrabbleutils::bonuses::{WordBonus, LetterBonus};
 use std::io::stdin;
 
 // I don't like designing ui, please feel free to improve it.
 
 pub fn print_board(board : &Board) {
-    // Top line
-    print!("    ");
+    print!("     ");
     for _ in 0..15 {
-        print!("----");
+        print!("-----");
     }
-    // End of first line and offset for second
-    print!("-\n    |");
-    // Second line (letters + separators)
+    print!("-\n     |");
     for i in 1..16 {
-        print!(" {:<2}|", i);
+        print!(" {:>2} |", i);
+    }
+    print!("\n     |");
+    for _ in 1..16 {
+        print!("    |");
     }
     println!("");
     for _ in 0..16 {
-        print!("----");
+        print!("-----");
     }
     println!("-");
+
+    // For each board row
     for y in 0..15 {
         print!("|");
         for x in 0..16 {
             if x == 0 {
-                print!(" {:>2}|", y + 1);
+                // Print the row number
+                print!(" {:>2} |", y + 1);
             }
             else {
-                print!(" {} |", board.get_letter(x - 1, y).unwrap_or(' '));
+                let letter = board.get_letter(x - 1, y);
+                match letter {
+                    Some(x) => {
+                        print!(" {}  |", x);
+                    }
+                    None => {
+                        // Check letter and word bonus
+                        let (lb, wb) = board.get_bonuses(x - 1, y);
+                        match wb {
+                            WordBonus::Triple => {
+                                print!(" W3 |");
+                                continue;
+                            }
+                            WordBonus::Double => {
+                                print!(" W2 |");
+                                continue;
+                            }
+                            _ => {}
+                        }
+                        match lb {
+                            LetterBonus::Triple => {
+                                print!(" L3 |");
+                            }
+                            LetterBonus::Double => {
+                                print!(" L2 |");
+                            }
+                            _ => {
+                                print!("    |");
+                            }
+                        }
+                    }
+                }
             }
         }
         print!("\n|");
         for x in 0..16 {
             if x == 0{
-                print!("   |");
+                print!("    |");
             }
             else {
                 let tile = board.get_tile(x - 1, y);
                 if tile == None {
-                    print!("   |");
+                    print!("    |");
                 }
                 else {
-                    print!(" {:>2}|", tile.unwrap().points());
+                    print!("  {:>2}|", tile.unwrap().points());
                 }
             }
         }
         println!("");
         for _ in 0..16 {
-            print!("----");
+            print!("-----");
         }
         println!("-");
     }
@@ -57,24 +93,24 @@ pub fn print_board(board : &Board) {
 pub fn print_hand(hand : &Hand) {
     // Top line
     for _ in 0..hand.get().len() {
-        print!("----");
+        print!("-----");
     }
     // End of first line and start of second
     print!("-\n|");
     // Second line (letters + separators)
     for i in hand.get() {
-        print!(" {} |", i.letter());
+        print!(" {}  |", i.letter());
     }
     // End of second line + start separator of third line
     print!("\n|");
     // Third line
     for i in hand.get() {
-        print!(" {:>2}|", i.points());
+        print!("  {:>2}|", i.points());
     }
     println!("");
     // Bottom line
     for _ in 0..hand.get().len() {
-        print!("----");
+        print!("-----");
     }
     print!("-\n");
 }
@@ -126,7 +162,6 @@ impl PlayerTrait for SimplePlayer {
                 continue;
             }
             let positions : Vec<Result<u8, std::num::ParseIntError>> = positions.iter().map(|e| e.parse::<u8>()).collect();
-            println!("{:?}", positions);
             if positions.iter().any(|e| e.is_err()) {
                 error_msg = Some("Positions should be numbers, the first is on the x coordinate from 1 to 15, the second in the descending y coordinate from 1 to 15.");
                 continue;
@@ -144,7 +179,6 @@ impl PlayerTrait for SimplePlayer {
                 error_msg = Some("Please provide at least the first character of a direction");
                 continue;
             }
-            println!("Direction char : {:?}", line);
             let direction_char = line.get(0).unwrap().chars().next().unwrap();
             let direction = match direction_char {
                 'H' | 'h' => Horizontal,
@@ -158,6 +192,14 @@ impl PlayerTrait for SimplePlayer {
             break;
         }
         return mv;
+    }
+
+    fn move_score(&self, score : u32) {
+        println!("Your move made {} points!", score);
+    }
+
+    fn total_score(&self, score : u32) {
+        println!("You have a total of {} points!", score);
     }
 }
 

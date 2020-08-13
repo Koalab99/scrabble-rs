@@ -1,0 +1,22 @@
+mod player;
+mod board;
+mod bonuses;
+mod spot;
+mod dico;
+mod gaddag;
+mod tilebag;
+mod smove;
+mod tile;
+mod hand;
+mod config;
+
+pub use player::PlayerTrait;
+pub use board::Board;
+pub use dico::Dico;
+pub use tilebag::TileBag;
+pub use smove::Move;
+pub use tile::Tile;
+pub use smove::Direction;
+pub use hand::Hand;
+pub use player::Player;
+pub use config::TileSet;

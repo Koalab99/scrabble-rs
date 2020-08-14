@@ -23,8 +23,6 @@ Start the application :
 ```
 
 ## Contributing
-I'm sorry for the lack of documentation, I'm working on it.
-
 You can tweak the `dico.txt` and `english_tileset.txt` file.
 
 ### dico.txt
@@ -44,8 +42,26 @@ with:
 And a small exception for the wildcard, it is represented by the character '\*'.
 
 ### If you feel adventurous
-There is a really simple API that will probably change soon that let you implement your own interface.
+There is an API that will probably change soon that let you implement your own interface.
 The interface can be a bot or a user interface.
-You can see the trait for it in `src/scrabbleutil/player.rs`
-and my basic implementation of it is in `src/scrab_tui/mod.rs`.
-It will go away some day, but since the project is just starting it's easier to get everything together.
+The trait for it is `PlayerTrait`.
+If you want some documentation, you can generate it with:
+```
+cargo doc
+```
+And open it in your browser with
+```
+cargo doc --open
+```
+
+### Direction of the project
+At the moment there is three main parts to it.
+* The main part
+	Well, its just the main.rs file
+* The core part
+	Everything in `src/scrabbleutils`. It gives some tools and the API for the game.
+* The interface
+	It is in `src/scrab_tui`, it is a first implementation of the PlayerTrait. That offers a first feel of what works and what doesn't
+
+And it is pretty good for now, since not everyting is working as intended.
+But when the project will be stable enough, it will hopefully split into three separate repositories.
